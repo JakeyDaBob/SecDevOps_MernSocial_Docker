@@ -2,3 +2,4 @@
 privkey.pem
 secrets.properties
 .vscode
+/mernsocial/.env
