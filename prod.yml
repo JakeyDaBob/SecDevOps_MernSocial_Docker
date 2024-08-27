@@ -1,0 +1,79 @@
+version: "3.3"
+services:
+    uni-frontend:
+      container_name: uni-frontend
+      build: ./mernsocial/client
+      #restart: unless-stopped
+      depends_on:
+        - uni-mongo
+        - uni-backend
+      ports:
+          - "3000:3000"
+      networks:
+        - frontend
+        - backend
+
+    uni-backend:
+      build: ./mernsocial
+      #restart: unless-stopped
+      container_name: uni-backend
+      ports:
+        - "8080:8080"
+      depends_on:
+        - uni-mongo
+      networks:
+        - backend
+
+    uni-mongo:
+      container_name: uni-mongo
+      image: mongo
+      environment:
+        MONGO_INITDB_ROOT_USERNAME: ${DB_USERNAME}
+        MONGO_INITDB_ROOT_PASSWORD: ${DB_PASSWORD}
+      volumes:
+        - ./mongo:/data/db
+      ports:
+        - "27017:27017"
+      networks:
+        - backend
+
+    uni-nginx:
+        image: nginx
+        container_name: uni-nginx
+        volumes:
+         - ./sites:/etc/nginx/conf.d
+         - ./certs:/etc/nginx/certs/
+        ports:
+         - "80:80"
+         - "443:443"
+        environment:
+         - NGINX_HOST=jimscontracting.com
+         - NGINX_PORT=80
+         - NGINX_PORT=443
+        networks:
+         - backend
+         - frontend
+
+    uni-mongo-express:
+      image: mongo-express
+      container_name: uni-mongo-express
+      environment:
+          - ME_CONFIG_MONGODB_SERVER=uni-mongo
+          - ME_CONFIG_MONGODB_PORT=27017
+          - ME_CONFIG_MONGODB_ENABLE_ADMIN=true
+          - ME_CONFIG_MONGODB_AUTH_USERNAME=${DB_USERNAME}
+          - ME_CONFIG_MONGODB_AUTH_PASSWORD=${DB_PASSWORD}
+          - ME_CONFIG_BASICAUTH_USERNAME=${DB_USERNAME}
+          - ME_CONFIG_BASICAUTH_PASSWORD=${DB_PASSWORD}
+      depends_on:
+          - uni-mongo
+      ports:
+        - "8081:8081"
+      networks:
+        - backend
+
+networks:
+  backend:
+    external: true
+  frontend:
+    external: true
